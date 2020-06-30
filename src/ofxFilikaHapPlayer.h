@@ -45,14 +45,14 @@ XML SETTINGS STRUCTURE
 class ofxFilikaHapPlayer
 {
 	//TODO:
-public:
-	void drawCover() {
-		coverImages[currentVid].draw(0, 0, 200, 200);
-	}
-	bool MODE_Fit = false;
-	void setModeFit(bool b) {
-		MODE_Fit = b;
-	}
+//public:
+//	void drawCover() {
+//		coverImages[currentVid].draw(0, 0, 200, 200);
+//	}
+	//bool MODE_Fit = false;
+	//void setModeFit(bool b) {
+	//	MODE_Fit = b;
+	//}
 
 private:
 
@@ -554,25 +554,25 @@ private:
 				if (player[currentVid]->isLoaded() && sounds[currentVid].isLoaded())
 				{
 					//original
-					//if (player[currentVid]->isPlaying())
-					//	player[currentVid]->draw(vidX, vidY, vidW, vidH);
+					if (player[currentVid]->isPlaying())
+						player[currentVid]->draw(vidX, vidY, vidW, vidH);
 
-					//TODO: not working
-					//added fit screen mode
-					if (player[currentVid]->isPlaying()) {
-						if (!MODE_Fit) {
-							player[currentVid]->draw(vidX, vidY, vidW, vidH);
-						}
-						else {
-							//ofPushMatrix();
-							//ofScale(2.0, 2.0, 2.0);
-							//ofSetColor(255, 255, 255);
-							ofRectangle videoRect(0, 0, player[currentVid]->getWidth(), player[currentVid]->getHeight());
-							videoRect.scaleTo(ofGetWindowRect(), OF_SCALEMODE_STRETCH_TO_FILL);
-							player[currentVid]->draw(videoRect.x, videoRect.y, videoRect.width, videoRect.height);
-							//ofPopMatrix();
-						}
-					}
+					////TODO: not working
+					////added fit screen mode
+					//if (player[currentVid]->isPlaying()) {
+					//	if (!MODE_Fit) {
+					//		player[currentVid]->draw(vidX, vidY, vidW, vidH);
+					//	}
+					//	else {
+					//		//ofPushMatrix();
+					//		//ofScale(2.0, 2.0, 2.0);
+					//		//ofSetColor(255, 255, 255);
+					//		ofRectangle videoRect(0, 0, player[currentVid]->getWidth(), player[currentVid]->getHeight());
+					//		videoRect.scaleTo(ofGetWindowRect(), OF_SCALEMODE_STRETCH_TO_FILL);
+					//		player[currentVid]->draw(videoRect.x, videoRect.y, videoRect.width, videoRect.height);
+					//		//ofPopMatrix();
+					//	}
+					//}
 
 					///if (sounds[currentVid].isPlaying())
 
