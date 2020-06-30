@@ -44,7 +44,17 @@ XML SETTINGS STRUCTURE
 
 class ofxFilikaHapPlayer
 {
-	private:
+	//TODO:
+public:
+	void drawCover() {
+		coverImages[currentVid].draw(0, 0, 200, 200);
+	}
+	bool MODE_Fit = false;
+	void setModeFit(bool b) {
+		MODE_Fit = b;
+	}
+
+private:
 
 		/* PRIVATE VARIABLES */
         ofTrueTypeFont ff;
@@ -445,6 +455,96 @@ class ofxFilikaHapPlayer
             }
 		}
     
+		void drawGui() {
+			// If navigation enabled then draw it on screen in front of the video
+			if (isNavEnabled) {
+				if (isNavBarAutoHide) {
+					if ((ofGetSystemTimeMillis() - lastMovement < navBarAutoHideTime))
+					{
+						drawNavBar = true;
+					}
+					else
+					{
+						drawNavBar = false;
+					}
+				}
+				else {
+					drawNavBar = true;
+
+				}
+
+				if (showCover && isCoverImagesEnabled) {
+					coverImages[currentVid].draw(vidX, vidY, vidW, vidH);
+					ofPushStyle();
+					ofSetColor(0, 0, 0, 130);
+					ofDrawRectangle(vidX, vidY, vidW, vidH);
+
+					btnPlayBig.draw(vidX + vidW * 0.5 - btnPlayBig.getWidth() * 0.5, vidY + vidH * 0.5 - btnPlayBig.getHeight() * 0.5);
+					ofPopStyle();
+				}
+
+				if (player[currentVid]->isPaused() || player[currentVid]->getIsMovieDone()) {
+					//showCover = true;
+				}
+
+				if (drawNavBar && showCover == false)
+				{
+					// Scrubbing
+					ofPushStyle();
+					ofRectangle bar = getBarRectangle();
+					ofFill();
+					ofSetColor(vidBarStrokeColor);
+					ofDrawRectRounded(ofRectangle(bar.x - stW * 0.5, bar.y - stW * 0.5, bar.getWidth() + stW, bar.getHeight() + stW), 30);
+					ofNoFill();
+
+					ofSetLineWidth(stW);
+					ofSetColor(vidBarStrokeColor);
+					//ofDrawRectangle(bar);
+					ofDrawRectRounded(bar, 30);
+
+					ofFill();
+					ofRectangle barFill = getBarRectangle();
+					ofSetColor(vidBarFillColor);
+					barFill.width *= player[currentVid]->getPosition();
+					//ofDrawRectangle(bar);
+					ofDrawRectRounded(barFill, 30);
+					ofPopStyle();
+
+					// Place play/pause Button
+					if (player[currentVid]->isPaused() || player[currentVid]->getIsMovieDone()) {
+						btnPlayPause.setPassive(false);
+						//showCover = true;
+					}
+					else {
+						//showCover = false;
+						btnPlayPause.setPassive(true);
+					}
+					btnPlayPause.draw(vidX + navBarMargin, barFill.y + barFill.getHeight() * 0.5 - btnPlayPause.getHeight() * 0.5);
+
+					btnPW = btnPlayPause.getPos().x + btnPlayPause.getWidth() * 0.5;
+
+					// Passed and remaining time
+					ofPushStyle();
+					float passedTime = ofMap(player[currentVid]->getPosition(), 0, 1, 0, player[currentVid]->getDuration());
+					string remainingTime = utils.calculateTime(player[currentVid]->getDuration() - passedTime);
+					string totalTime = utils.calculateTime(player[currentVid]->getDuration());
+					//ofBitmapFont f;
+
+					ofRectangle rectPassedTime = ff.getStringBoundingBox(remainingTime + " / " + totalTime, 0, 0);
+
+					int passedTimeX = bar.x + bar.getWidth() - rectPassedTime.getWidth() - 10;
+					int passedTimeY = bar.y + (bar.getHeight() * 0.5 + 5);
+
+					// ofSetColor(255);
+					// ofDrawBitmapString(ofToString("00:00"), passedTimeX + 1, passedTimeY + 1);
+					ofSetColor(0);
+					//ofDrawBitmapString(remainingTime + "/" + totalTime, passedTimeX, passedTimeY);
+					ff.drawString(remainingTime + " / " + totalTime, passedTimeX, passedTimeY);
+					ofPopStyle();
+				}
+			}
+		}
+
 		void draw() {
 			if(loadSound)
 				ofSoundUpdate();
@@ -453,8 +553,26 @@ class ofxFilikaHapPlayer
 			if (loadSound) {
 				if (player[currentVid]->isLoaded() && sounds[currentVid].isLoaded())
 				{
-					if (player[currentVid]->isPlaying())
-						player[currentVid]->draw(vidX, vidY, vidW, vidH);
+					//original
+					//if (player[currentVid]->isPlaying())
+					//	player[currentVid]->draw(vidX, vidY, vidW, vidH);
+
+					//TODO: not working
+					//added fit screen mode
+					if (player[currentVid]->isPlaying()) {
+						if (!MODE_Fit) {
+							player[currentVid]->draw(vidX, vidY, vidW, vidH);
+						}
+						else {
+							//ofPushMatrix();
+							//ofScale(2.0, 2.0, 2.0);
+							//ofSetColor(255, 255, 255);
+							ofRectangle videoRect(0, 0, player[currentVid]->getWidth(), player[currentVid]->getHeight());
+							videoRect.scaleTo(ofGetWindowRect(), OF_SCALEMODE_STRETCH_TO_FILL);
+							player[currentVid]->draw(videoRect.x, videoRect.y, videoRect.width, videoRect.height);
+							//ofPopMatrix();
+						}
+					}
 
 					///if (sounds[currentVid].isPlaying())
 
@@ -474,91 +592,91 @@ class ofxFilikaHapPlayer
 				}
 			}
             
-            // If navigation enabled then draw it on screen in front of the video
-            if(isNavEnabled) {
-                if(isNavBarAutoHide) {
-                    if ((ofGetSystemTimeMillis() - lastMovement < navBarAutoHideTime))
-                    {
-                        drawNavBar = true;
-                    }
-                    else
-                    {
-                        drawNavBar = false;
-                    }
-                }else{
-                    drawNavBar = true;
+            //// If navigation enabled then draw it on screen in front of the video
+            //if(isNavEnabled) {
+            //    if(isNavBarAutoHide) {
+            //        if ((ofGetSystemTimeMillis() - lastMovement < navBarAutoHideTime))
+            //        {
+            //            drawNavBar = true;
+            //        }
+            //        else
+            //        {
+            //            drawNavBar = false;
+            //        }
+            //    }else{
+            //        drawNavBar = true;
 					
-                }
-                
-                if(showCover && isCoverImagesEnabled) {
-                    coverImages[currentVid].draw(vidX, vidY, vidW, vidH);
-                    ofPushStyle();
-                    ofSetColor(0,0,0,130);
-                    ofDrawRectangle(vidX, vidY, vidW, vidH);
-                    
-                    btnPlayBig.draw(vidX + vidW * 0.5 - btnPlayBig.getWidth() * 0.5, vidY + vidH * 0.5 - btnPlayBig.getHeight() * 0.5);
-                    ofPopStyle();
-                }
-                
-                if(player[currentVid]->isPaused() || player[currentVid]->getIsMovieDone()) {
-                    //showCover = true;
-                }
-                
-                if(drawNavBar && showCover == false)
-                {
-                    // Scrubbing
-                    ofPushStyle();
-                    ofRectangle bar = getBarRectangle();
-                    ofFill();
-                    ofSetColor(vidBarStrokeColor);
-                    ofDrawRectRounded(ofRectangle(bar.x - stW*0.5, bar.y - stW*0.5, bar.getWidth() + stW, bar.getHeight() + stW), 30);
-                    ofNoFill();
-                   
-                    ofSetLineWidth(stW);
-                    ofSetColor(vidBarStrokeColor);
-                    //ofDrawRectangle(bar);
-                    ofDrawRectRounded(bar, 30);
-                    
-                    ofFill();
-                    ofRectangle barFill = getBarRectangle();
-                    ofSetColor(vidBarFillColor);
-                    barFill.width *= player[currentVid]->getPosition();
-                    //ofDrawRectangle(bar);
-                    ofDrawRectRounded(barFill, 30);
-                    ofPopStyle();
-                    
-                    // Place play/pause Button
-                    if(player[currentVid]->isPaused() || player[currentVid]->getIsMovieDone()) {
-                        btnPlayPause.setPassive(false);
-                        //showCover = true;
-                    }else{
-                        //showCover = false;
-                        btnPlayPause.setPassive(true);
-                    }
-                    btnPlayPause.draw(vidX + navBarMargin, barFill.y + barFill.getHeight() * 0.5 - btnPlayPause.getHeight() * 0.5);
-                    
-                    btnPW = btnPlayPause.getPos().x + btnPlayPause.getWidth() * 0.5;
-                    
-                    // Passed and remaining time
-                    ofPushStyle();
-                    float passedTime = ofMap(player[currentVid]->getPosition(), 0, 1, 0, player[currentVid]->getDuration());
-                    string remainingTime = utils.calculateTime(player[currentVid]->getDuration() - passedTime);
-                    string totalTime = utils.calculateTime(player[currentVid]->getDuration());
-                    //ofBitmapFont f;
-                    
-                    ofRectangle rectPassedTime = ff.getStringBoundingBox(remainingTime + " / " + totalTime,0,0);
-                   
-                    int passedTimeX = bar.x + bar.getWidth() - rectPassedTime.getWidth() - 10;
-                    int passedTimeY = bar.y + (bar.getHeight() * 0.5 + 5);
-                    
-                    // ofSetColor(255);
-                    // ofDrawBitmapString(ofToString("00:00"), passedTimeX + 1, passedTimeY + 1);
-                    ofSetColor(0);
-                    //ofDrawBitmapString(remainingTime + "/" + totalTime, passedTimeX, passedTimeY);
-                    ff.drawString(remainingTime + " / " + totalTime, passedTimeX, passedTimeY);
-                    ofPopStyle();
-                }
-            }
+            //    }
+            //    
+            //    if(showCover && isCoverImagesEnabled) {
+            //        coverImages[currentVid].draw(vidX, vidY, vidW, vidH);
+            //        ofPushStyle();
+            //        ofSetColor(0,0,0,130);
+            //        ofDrawRectangle(vidX, vidY, vidW, vidH);
+            //        
+            //        btnPlayBig.draw(vidX + vidW * 0.5 - btnPlayBig.getWidth() * 0.5, vidY + vidH * 0.5 - btnPlayBig.getHeight() * 0.5);
+            //        ofPopStyle();
+            //    }
+            //    
+            //    if(player[currentVid]->isPaused() || player[currentVid]->getIsMovieDone()) {
+            //        //showCover = true;
+            //    }
+            //    
+            //    if(drawNavBar && showCover == false)
+            //    {
+            //        // Scrubbing
+            //        ofPushStyle();
+            //        ofRectangle bar = getBarRectangle();
+            //        ofFill();
+            //        ofSetColor(vidBarStrokeColor);
+            //        ofDrawRectRounded(ofRectangle(bar.x - stW*0.5, bar.y - stW*0.5, bar.getWidth() + stW, bar.getHeight() + stW), 30);
+            //        ofNoFill();
+            //       
+            //        ofSetLineWidth(stW);
+            //        ofSetColor(vidBarStrokeColor);
+            //        //ofDrawRectangle(bar);
+            //        ofDrawRectRounded(bar, 30);
+            //        
+            //        ofFill();
+            //        ofRectangle barFill = getBarRectangle();
+            //        ofSetColor(vidBarFillColor);
+            //        barFill.width *= player[currentVid]->getPosition();
+            //        //ofDrawRectangle(bar);
+            //        ofDrawRectRounded(barFill, 30);
+            //        ofPopStyle();
+            //        
+            //        // Place play/pause Button
+            //        if(player[currentVid]->isPaused() || player[currentVid]->getIsMovieDone()) {
+            //            btnPlayPause.setPassive(false);
+            //            //showCover = true;
+            //        }else{
+            //            //showCover = false;
+            //            btnPlayPause.setPassive(true);
+            //        }
+            //        btnPlayPause.draw(vidX + navBarMargin, barFill.y + barFill.getHeight() * 0.5 - btnPlayPause.getHeight() * 0.5);
+            //        
+            //        btnPW = btnPlayPause.getPos().x + btnPlayPause.getWidth() * 0.5;
+            //        
+            //        // Passed and remaining time
+            //        ofPushStyle();
+            //        float passedTime = ofMap(player[currentVid]->getPosition(), 0, 1, 0, player[currentVid]->getDuration());
+            //        string remainingTime = utils.calculateTime(player[currentVid]->getDuration() - passedTime);
+            //        string totalTime = utils.calculateTime(player[currentVid]->getDuration());
+            //        //ofBitmapFont f;
+            //        
+            //        ofRectangle rectPassedTime = ff.getStringBoundingBox(remainingTime + " / " + totalTime,0,0);
+            //       
+            //        int passedTimeX = bar.x + bar.getWidth() - rectPassedTime.getWidth() - 10;
+            //        int passedTimeY = bar.y + (bar.getHeight() * 0.5 + 5);
+            //        
+            //        // ofSetColor(255);
+            //        // ofDrawBitmapString(ofToString("00:00"), passedTimeX + 1, passedTimeY + 1);
+            //        ofSetColor(0);
+            //        //ofDrawBitmapString(remainingTime + "/" + totalTime, passedTimeX, passedTimeY);
+            //        ff.drawString(remainingTime + " / " + totalTime, passedTimeX, passedTimeY);
+            //        ofPopStyle();
+            //    }
+            //}
 		}
 
 		
